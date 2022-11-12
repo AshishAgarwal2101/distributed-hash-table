@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package chord;
+
+import "google/protobuf/empty.proto";
+
+service RouteGuide {
+    rpc DummyRemote(DummyRequest) returns (DummyResponse);
+    rpc GetSuccessorRemote(SuccessorRequest) returns (NodeDetails);
+}
+
+message DummyRequest {
+    uint32 id = 1;
+}
+
+message DummyResponse {
+    string dummyKey = 1;
+}
+
+message NodeDetails {
+    uint32 id = 1;
+    string host = 2;
+    uint32 port = 3;
+}
+
+message SuccessorRequest {
+    uint32 id = 1;
+    NodeDetails nodeDetails = 2;
+}
