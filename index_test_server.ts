@@ -10,6 +10,9 @@ async function main() {
 
     let server = new RemoteServer(host, port);
     server.startServer();
+    let successorResponse = await server.findSuccessor(1100);
+
+    console.log("Response: ", successorResponse);
 }
 
 main();
