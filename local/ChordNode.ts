@@ -61,6 +61,23 @@ class ChordNode {
         }
     }
 
+    async stabilize(): Promise<void> {
+        if (this.successors.length==0){
+            return;
+        }
+        
+        let successorClient= getClient(this.successors[0].host,this.successors[0].port);
+        successorClient.notifyRemote({predecessor: this.nodeDetails});
+    }
+
+    async notify(refNode:NodeDetails): Promise<void> {
+
+        if (this.predecessor==null || (refNode.id<this.nodeDetails.id && refNode.id > this.predecessor.id)){
+            this.predecessor=refNode;
+        } 
+
+    }
+
     async closestPrecedingNode(id: number): Promise<NodeDetails> {
         for(let i=this.fingers.length-1; i>=0; i--){
             let fingerId = this.fingers[i].id;

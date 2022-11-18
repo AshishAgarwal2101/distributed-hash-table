@@ -24,7 +24,8 @@ class RemoteServer extends ChordNode {
         let server = new grpc.Server();
         server.addService(routeguide.RouteGuide.service, {
             dummyRemote: this.dummyRemote.bind(this),
-            getSuccessorRemote: this.getSuccessorRemote.bind(this)
+            getSuccessorRemote: this.getSuccessorRemote.bind(this),
+            notifyRemote : this.notifyRemote.bind(this)
         });
     
         return server;
@@ -45,6 +46,10 @@ class RemoteServer extends ChordNode {
         let nodeDetails = await this.findSuccessor(call.request.id);
         callback(null, nodeDetails);
     };
+
+    async notifyRemote(call,callback){
+        await this.notify(call.request.predecessor);
+    }
 }
 
 export default RemoteServer;
