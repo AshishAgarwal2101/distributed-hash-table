@@ -7,7 +7,10 @@ import "google/protobuf/empty.proto";
 service RouteGuide {
     rpc DummyRemote(DummyRequest) returns (DummyResponse);
     rpc GetSuccessorRemote(SuccessorRequest) returns (NodeDetails);
+    rpc NotifyRemote(NotifyRequest) returns ();
 }
+
+
 
 message DummyRequest {
     uint32 id = 1;
@@ -26,3 +29,8 @@ message NodeDetails {
 message SuccessorRequest {
     uint32 id = 1;
 }
+
+message NotifytRequest{
+    NodeDetails predecessor = 1;
+}
+
