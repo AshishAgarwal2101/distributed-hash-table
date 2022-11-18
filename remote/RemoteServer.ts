@@ -41,8 +41,9 @@ class RemoteServer extends ChordNode {
         callback(null, {dummyKey: "This is a dummy response for " + call.request.id});
     };
     
-    getSuccessorRemote(call, callback) {
-        callback(null, {id: 2, host: "http://abc.com", port: 4040});
+    async getSuccessorRemote(call, callback) {
+        let nodeDetails = await this.findSuccessor(call.request.id);
+        callback(null, nodeDetails);
     };
 }
 

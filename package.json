@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx tsc && npm run copyUnix:assets",
+    "build": "npx tsc && npm run copyWindows:assets",
     "start": "node dist/index.js",
     "testServer": "node dist/index_test_server.js",
     "copyUnix:assets": "cpx 'remote/protos/**' 'dist/remote/protos'",

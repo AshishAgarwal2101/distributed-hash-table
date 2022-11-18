@@ -25,5 +25,4 @@ message NodeDetails {
 
 message SuccessorRequest {
     uint32 id = 1;
-    NodeDetails nodeDetails = 2;
 }

@@ -17,9 +17,9 @@ export const NULL_NODE_DETAILS: NodeDetails = {
 
 class ChordNode {
     nodeDetails: NodeDetails;
-    successors: Array<NodeDetails> = [];
+    successors: Array<NodeDetails> = [{id: 1120, host: "localhost", port: 4009}];
     predecessor: NodeDetails = NULL_NODE_DETAILS;
-    fingers: Array<NodeDetails> = [{id: 1050, host: "localhost", port: 4002}];
+    fingers: Array<NodeDetails> = [{id: 1050, host: "localhost", port: 4003}];
 
     constructor(host: string, port: number){
         this.nodeDetails = {
@@ -69,7 +69,6 @@ class ChordNode {
     async joinCluster(): Promise<void> {
         let bitSize = HASH_NUM_OF_BITS;
     };
-
 }
 
 export default ChordNode;
