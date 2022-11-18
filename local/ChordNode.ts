@@ -44,6 +44,12 @@ class ChordNode {
         return await this.findSuccessorRemote(id, closestPrecedingNodeForId);
     }
 
+    async join(refNode:NodeDetails): Promise<void> {
+
+        this.predecessor = null;
+        this.successors[0]= await this.findSuccessorRemote(this.nodeDetails.id,refNode);
+    }
+
     async findSuccessorRemote(id: number, closestPrecedingNode: NodeDetails): Promise<NodeDetails> {
         try {
             let closestPrecedingClient = getClient(closestPrecedingNode.host, closestPrecedingNode.port);
