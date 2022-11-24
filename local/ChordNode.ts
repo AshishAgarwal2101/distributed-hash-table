@@ -20,6 +20,10 @@ class ChordNode {
     successors: Array<NodeDetails> = [{id: 1120, host: "localhost", port: 4009}];
     predecessor: NodeDetails = NULL_NODE_DETAILS;
     fingers: Array<NodeDetails> = [{id: 1050, host: "localhost", port: 4003}];
+    // fingers: Array<NodeDetails> = [
+    //     NULL_NODE_DETAILS
+    // ];
+    next: number = 0;
 
     constructor(host: string, port: number){
         this.nodeDetails = {
@@ -28,6 +32,7 @@ class ChordNode {
             host: host,
             port: port
         }
+        setInterval(function(){ fixFingers() }, 10000);
     }
 
     isItMyNode(nodeDetails: NodeDetails): boolean {
@@ -42,6 +47,11 @@ class ChordNode {
 
         let closestPrecedingNodeForId = await this.closestPrecedingNode(id);
         return await this.findSuccessorRemote(id, closestPrecedingNodeForId);
+    }
+
+    async create(): Promise<void> {
+        this.predecessor = null;
+        this.successors[0] = this.nodeDetails;
     }
 
     async join(refNode:NodeDetails): Promise<void> {
@@ -92,6 +102,11 @@ class ChordNode {
     async joinCluster(): Promise<void> {
         let bitSize = HASH_NUM_OF_BITS;
     };
+
+    async fixFingers(): Promise<void> {
+        let next = (this.next + 1) % HASH_NUM_OF_BITS;
+        this.fingers[next] = await this.findSuccessor(this.nodeDetails.id + 2 ** next - 1);
+    }
 }
 
 export default ChordNode;
