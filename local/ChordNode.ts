@@ -32,7 +32,7 @@ class ChordNode {
             host: host,
             port: port
         }
-        setInterval(function(){ fixFingers() }, 10000);
+        setInterval(this.fixFingers, 10000);
     }
 
     isItMyNode(nodeDetails: NodeDetails): boolean {
