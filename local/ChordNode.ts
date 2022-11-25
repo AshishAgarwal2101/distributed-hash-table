@@ -23,11 +23,35 @@ class ChordNode {
 
     constructor(host: string, port: number){
         this.nodeDetails = {
-            id: 1000,
-            //id: getHash(`$host:$port`),
+            //id: 1000,
+            id: getHash(`$host:$port`,0,0),
             host: host,
             port: port
         }
+
+       
+    }
+
+    getHash(str: String,counter : number,hash : number){
+        while(true){
+            if (str.length === 0) return hash;
+            
+            for (let i = 0; i < str.length; i++) 
+            {
+                let chr = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + chr;
+                hash |= 0; // Convert to 32bit integer
+            }
+            let hashId=hash% Math.pow(2, HASH_NUM_OF_BITS)
+            if (this.successors[0].id==hashId){
+                let newString=str+("" +(counter++))
+                getHash(newString,counter++,0) 
+            }
+            else{
+                return hashId
+            }
+        }
+
     }
 
     isItMyNode(nodeDetails: NodeDetails): boolean {
