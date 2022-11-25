@@ -8,6 +8,7 @@ service RouteGuide {
     rpc DummyRemote(DummyRequest) returns (DummyResponse);
     rpc GetSuccessorRemote(SuccessorRequest) returns (NodeDetails);
     rpc NotifyRemote(NotifyRequest) returns ();
+    rpc GetFingerTableRemote() returns ()
 }
 
 
@@ -32,5 +33,10 @@ message SuccessorRequest {
 
 message NotifytRequest{
     NodeDetails predecessor = 1;
+}
+
+message FingerTableResponse {
+    NodeDetails currNode = 1;
+    repeated NodeDetails fingers = 2;
 }
 

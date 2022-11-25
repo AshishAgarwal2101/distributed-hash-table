@@ -3,7 +3,7 @@ import { getHash } from "../util/Util";
 import { getClient } from "../remote/RemoteClient";
 
 
-interface NodeDetails {
+export interface NodeDetails {
     id: number;
     host: string;
     port: number;
@@ -99,13 +99,16 @@ class ChordNode {
         return this.nodeDetails;
     }
 
-    async joinCluster(): Promise<void> {
-        let bitSize = HASH_NUM_OF_BITS;
-    };
-
     async fixFingers(): Promise<void> {
         let next = (this.next + 1) % HASH_NUM_OF_BITS;
         this.fingers[next] = await this.findSuccessor(this.nodeDetails.id + 2 ** next - 1);
+    }
+
+    async getFingerTable(): Promise<{ currNode: NodeDetails, fingers: NodeDetails[] }> {
+        return {
+            currNode: this.nodeDetails,
+            fingers: this.fingers
+        };
     }
 }
 

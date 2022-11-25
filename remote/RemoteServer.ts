@@ -25,7 +25,8 @@ class RemoteServer extends ChordNode {
         server.addService(routeguide.RouteGuide.service, {
             dummyRemote: this.dummyRemote.bind(this),
             getSuccessorRemote: this.getSuccessorRemote.bind(this),
-            notifyRemote : this.notifyRemote.bind(this)
+            notifyRemote : this.notifyRemote.bind(this),
+            getFingerTableRemote: this.getFingerTableRemote.bind(this)
         });
     
         return server;
@@ -49,6 +50,11 @@ class RemoteServer extends ChordNode {
 
     async notifyRemote(call,callback){
         await this.notify(call.request.predecessor);
+    }
+
+    async getFingerTableRemote(call, callback) {
+        let fingerTable = this.getFingerTable();
+        callback(null, fingerTable);
     }
 }
 
