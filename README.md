@@ -7,7 +7,8 @@
 2. Run command: "npm install".
 
 ### Build
-1. Run command: "npm run build"
+1. If you are using Windows, run command: "npm run buildWin".
+2. If you are using Unix based system, run command: "npm run build".
 
 ### Starting the Server (Currently in development, not working)
 1. Run command: "npm start -- \<host> \<port>" <br />
@@ -15,8 +16,9 @@
 
 
 ### For our testing, start the server in port 4003 and then run the test script in port 4002
-1. If you are using a Windows system, go to package.json file and modify the build script as follows: <br />
-    "npx tsc && npm run copyWindows:assets"
-2. Complete the Setup and Build steps using the above mentioned instructions.
-3. In first terminal, run the following command, "npm start -- localhost 4003"
-4. In second terminal, run the following command, "npm run testServer -- localhost 4002"
+1. Complete the Setup and Build steps using the above mentioned instructions.
+2. Run the following command in four different terminals: <br />
+    npm start -- localhost 4001 <br />
+    npm start -- localhost 4002 localhost 4001 2 <br />
+    npm start -- localhost 4003 localhost 4001 3 <br />
+    npm start -- localhost 4011 localhost 4003 11 <br />
