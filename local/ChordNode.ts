@@ -17,14 +17,9 @@ export const NULL_NODE_DETAILS: NodeDetails = {
 
 class ChordNode {
     nodeDetails: NodeDetails;
-    //successors: Array<NodeDetails> = [{id: 1120, host: "localhost", port: 4009}];
     successors: Array<NodeDetails> = [];
     predecessor: NodeDetails = null;
-    //fingers: Array<NodeDetails> = [{id: 1050, host: "localhost", port: 4003}];
     fingers: Array<NodeDetails> = [];
-    // fingers: Array<NodeDetails> = [
-    //     NULL_NODE_DETAILS
-    // ];
     next: number = -1;
 
     constructor(host: string, port: number, hashId: number){
