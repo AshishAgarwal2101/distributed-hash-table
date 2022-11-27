@@ -15,7 +15,7 @@
     e.g. npm start -- localhost 4003
 
 
-### For our testing, start the server in port 4003 and then run the test script in port 4002
+### Testing
 1. Complete the Setup and Build steps using the above mentioned instructions.
 2. Run the following commands in four different terminals: <br />
     npm start -- localhost 4001 <br />
