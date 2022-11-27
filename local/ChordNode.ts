@@ -57,15 +57,26 @@ class ChordNode {
     }
 
     async findSuccessor(id: number): Promise<NodeDetails> {
-        if(this.successors.length > 0 && isIdInBetween(this.nodeDetails.id, this.successors[0].id, id)){
-            return this.successors[0];
+        try{
+            if(this.successors.length > 0 && isIdInBetween(this.nodeDetails.id, this.successors[0].id, id)){
+                console.log(`Node ${constructNodeStr(this.nodeDetails)} => Finding successor => Finger for id ${id} found between ${this.nodeDetails.id} and ${this.successors[0].id}`);
+                return this.successors[0];
+            }
+            if(this.fingers.length == 0 && (this.successors.length == 0 || this.successors[0] === this.nodeDetails)){
+                console.log(`Node ${constructNodeStr(this.nodeDetails)} => Finding successor => No finger or successor found - successor is itself`);
+                return this.nodeDetails;
+            }
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Finding successor => Finding closestPrecedingNode`);
+            let closestPrecedingNodeForId = await this.closestPrecedingNode(id);
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Finding successor => closestPrecedingNode is ${constructNodeStr(closestPrecedingNodeForId)}`);
+            if(closestPrecedingNodeForId.id === this.nodeDetails.id){
+                return this.successors[0];
+            }
+            return await this.findSuccessorRemote(id, closestPrecedingNodeForId);
+        }catch(e){
+            console.log("Error while finding successor node local: ", e);
+            return null;
         }
-        if(this.fingers.length == 0){
-            return this.nodeDetails;
-        }
-
-        let closestPrecedingNodeForId = await this.closestPrecedingNode(id);
-        return await this.findSuccessorRemote(id, closestPrecedingNodeForId);
     }
 
     async findSuccessorRemote(id: number, closestPrecedingNode: NodeDetails): Promise<NodeDetails> {
@@ -75,67 +86,103 @@ class ChordNode {
             console.log(`Node ${constructNodeStr(this.nodeDetails)} => Found successor ${constructNodeStr(succ)}`);
             return succ;
         } catch(error) {
-            console.error(`Node ${constructNodeStr(this.nodeDetails)} => Error while trying to find successor from remote node ${constructNodeStr(closestPrecedingNode)}`);
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Error while trying to find successor from remote node ${constructNodeStr(closestPrecedingNode)}`);
+            return null;
         }
     }
 
     async closestPrecedingNode(id: number): Promise<NodeDetails> {
-        for(let i=this.fingers.length-1; i>=0; i--){
-            let fingerId = this.fingers[i].id;
-            if(isIdInBetween(this.nodeDetails.id, id, fingerId)){
-                console.log(`Node ${constructNodeStr(this.nodeDetails)} => Returning Finger ${this.fingers[i].host}:${this.fingers[i].port}`);
-                return this.fingers[i];
+        try{
+            for(let i=this.fingers.length-1; i>=0; i--){
+                let fingerId = this.fingers[i].id;
+                if(isIdInBetween(this.nodeDetails.id, id, fingerId)){
+                    console.log(`Node ${constructNodeStr(this.nodeDetails)} => Returning Finger ${this.fingers[i].host}:${this.fingers[i].port}`);
+                    return this.fingers[i];
+                }
             }
+            return this.nodeDetails;
+        }catch(e){
+            console.log("Error while finding closest preceding node: ", e);
+            return null;
         }
-        return this.nodeDetails;
     }
 
     async create(): Promise<void> {
-        this.predecessor = null;
-        this.successors[0] = this.nodeDetails;
-        this.fingers = [];
-        this.next =  -1;
-        setInterval(this.fixFingers, 5000); //called every 5 seconds
+        try{
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => A new cluster is being created`);
+            this.predecessor = null;
+            this.successors[0] = this.nodeDetails;
+            this.fingers = [];
+            this.next =  -1;
+            setInterval(this.fixFingers, 5000); //called every 5 seconds
+        }catch(e){
+            console.log("Error during node create: ", e);
+        }
     }
 
     async join(refNode:NodeDetails): Promise<void> {
-        console.log(`Node ${constructNodeStr(this.nodeDetails)} => Node joining the cluster`);
-        this.predecessor = null;
-        this.successors[0] = await this.findSuccessorRemote(this.nodeDetails.id, refNode);
-        this.fingers[0] = this.successors[0];
-        console.log(`Node ${constructNodeStr(this.nodeDetails)} => Node's successor and first finger: ${constructNodeStr(this.successors[0])}`);
-        this.next =  0;
-        setInterval(this.fixFingers, 5000); //called every 5 seconds
+        try {
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Node joining the cluster`);
+            this.predecessor = null;
+            this.successors[0] = await this.findSuccessorRemote(this.nodeDetails.id + 1, refNode);
+            this.fingers[0] = this.successors[0];
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Node's successor and first finger: ${constructNodeStr(this.successors[0])}`);
+            this.next =  0;
+            setInterval(this.fixFingers, 5000); //called every 5 seconds
+        }catch(e){
+            console.log("Error during node join: ", e);
+        }
+        
     }
 
     async stabilize(): Promise<void> {
-        console.log(`Node ${constructNodeStr(this.nodeDetails)} => Stabilize called`);
-        if (this.successors.length == 0 || this.successors[0] === this.nodeDetails){
-            return;
+        try{
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Stabilize called`);
+            if (this.successors.length == 0 || this.successors[0] === this.nodeDetails){
+                console.log(`Node ${constructNodeStr(this.nodeDetails)} => No successor found to stabilize. Exiting.`);
+                return;
+            }
+            
+            let successorClient = getClient(this.successors[0].host, this.successors[0].port);
+            let succPredecessor: NodeDetails = await successorClient.getPredecessorRemote();
+            if(succPredecessor && isIdInBetween(this.nodeDetails.id, this.successors[0].id, succPredecessor.id)){
+                this.successors[0] = succPredecessor;
+                console.log(`Node ${constructNodeStr(this.nodeDetails)} => Stabilize sets successor to ${constructNodeStr(this.successors[0])}`);
+                successorClient = getClient(this.successors[0].host, this.successors[0].port);
+            }
+            successorClient.notifyRemote({predecessor: this.nodeDetails});
+        }catch(e){
+            console.log("Error during node stabilize: ", e);
         }
-        
-        let successorClient = getClient(this.successors[0].host, this.successors[0].port);
-        let succPredecessor: NodeDetails = await successorClient.getPredecessorRemote();
-        if(succPredecessor && isIdInBetween(this.nodeDetails.id, this.successors[0].id, succPredecessor.id)){
-            this.successors[0] = succPredecessor;
-            successorClient = getClient(this.successors[0].host, this.successors[0].port);
-        }
-        successorClient.notifyRemote({predecessor: this.nodeDetails});
     }
 
     async notify(refNode:NodeDetails): Promise<void> {
-        console.log(`Node ${constructNodeStr(this.nodeDetails)} => Notify called with refNode  ${constructNodeStr(refNode)}`);
-        if(!this.predecessor || (isIdInBetween(this.predecessor.id, this.nodeDetails.id, refNode.id))){
-            this.predecessor = refNode;
-        } 
+        try{
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Notify called with refNode  ${constructNodeStr(refNode)}`);
+            if(!this.predecessor || (isIdInBetween(this.predecessor.id, this.nodeDetails.id, refNode.id))){
+                this.predecessor = refNode;
+                if(this.successors.length == 0 || this.successors[0] === this.nodeDetails){
+                    this.successors[0] = refNode;
+                }
+            } 
+        }catch(e){
+            console.log("Error during node notify: ", e);
+        }
     }
 
     async fixFingers(): Promise<void> {
-        this.next = (this.next + 1) % HASH_NUM_OF_BITS;
-        console.log(`Node ${constructNodeStr(this.nodeDetails)} => Fixing finger ${this.next}`);
-        let fixedFinger = await this.findSuccessor(this.nodeDetails.id + (2 ** this.next));
-        this.fingers[this.next] = fixedFinger ? fixedFinger : this.fingers[this.next];
-        console.log(`Node ${constructNodeStr(this.nodeDetails)} => Finger ${this.next} set to ${constructNodeStr(this.fingers[this.next])}`);
+        try{
+            this.next = (this.next + 1) % HASH_NUM_OF_BITS;
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Fixing finger ${this.next}`);
+            let fixedFinger = await this.findSuccessor(this.nodeDetails.id + (2 ** this.next));
+            this.fingers[this.next] = fixedFinger ? fixedFinger : this.fingers[this.next];
+            if(!fixedFinger){
+                console.log(`Node ${constructNodeStr(this.nodeDetails)} => Fixing finger ${this.next} returned null`);
+            }
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Finger ${this.next} set to ${constructNodeStr(this.fingers[this.next])}`);
+        }catch(e){
+            console.log("Error during fix fingers: ", e);
+        }
     }
 
     findFingerTable(): { currNode: NodeDetails, fingers: NodeDetails[] } {
