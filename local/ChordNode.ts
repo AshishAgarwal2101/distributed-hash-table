@@ -58,6 +58,7 @@ class ChordNode {
 
     async findSuccessor(id: number): Promise<NodeDetails> {
         try{
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Finding successor for id ${id} - Current successor ${this.successors[0].id}`);
             if(this.successors.length > 0 && isIdInBetween(this.nodeDetails.id, this.successors[0].id, id)){
                 console.log(`Node ${constructNodeStr(this.nodeDetails)} => Finding successor => Finger for id ${id} found between ${this.nodeDetails.id} and ${this.successors[0].id}`);
                 return this.successors[0];
@@ -122,9 +123,10 @@ class ChordNode {
 
     async join(refNode:NodeDetails): Promise<void> {
         try {
+            let successorMinimumId = (this.nodeDetails.id + 1) % (2 ** HASH_NUM_OF_BITS);
             console.log(`Node ${constructNodeStr(this.nodeDetails)} => Node joining the cluster`);
             this.predecessor = null;
-            this.successors[0] = await this.findSuccessorRemote(this.nodeDetails.id + 1, refNode);
+            this.successors[0] = await this.findSuccessorRemote(successorMinimumId, refNode);
             this.fingers[0] = this.successors[0];
             console.log(`Node ${constructNodeStr(this.nodeDetails)} => Node's successor and first finger: ${constructNodeStr(this.successors[0])}`);
             this.next =  0;
@@ -144,12 +146,15 @@ class ChordNode {
             }
             
             let successorClient = getClient(this.successors[0].host, this.successors[0].port);
-            let succPredecessor: NodeDetails = await successorClient.getPredecessorRemote();
+            let succPredecessor: NodeDetails = (await successorClient.getPredecessorRemote()).predecessor;
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Stabilize => Successor's predecessor is ${succPredecessor ? constructNodeStr(succPredecessor) : null}`);
+
             if(succPredecessor && isIdInBetween(this.nodeDetails.id, this.successors[0].id, succPredecessor.id)){
                 this.successors[0] = succPredecessor;
                 console.log(`Node ${constructNodeStr(this.nodeDetails)} => Stabilize sets successor to ${constructNodeStr(this.successors[0])}`);
                 successorClient = getClient(this.successors[0].host, this.successors[0].port);
             }
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Stabilize => Notifying remote with id ${this.successors[0].id}`);
             successorClient.notifyRemote({predecessor: this.nodeDetails});
         }catch(e){
             console.log("Error during node stabilize: ", e);
@@ -173,8 +178,9 @@ class ChordNode {
     async fixFingers(): Promise<void> {
         try{
             this.next = (this.next + 1) % HASH_NUM_OF_BITS;
+            let nextId = (this.nodeDetails.id + (2 ** this.next)) % (2 ** HASH_NUM_OF_BITS);
             console.log(`Node ${constructNodeStr(this.nodeDetails)} => Fixing finger ${this.next}`);
-            let fixedFinger = await this.findSuccessor(this.nodeDetails.id + (2 ** this.next));
+            let fixedFinger = await this.findSuccessor(nextId);
             this.fingers[this.next] = fixedFinger ? fixedFinger : this.fingers[this.next];
             if(!fixedFinger){
                 console.log(`Node ${constructNodeStr(this.nodeDetails)} => Fixing finger ${this.next} returned null`);
@@ -193,6 +199,12 @@ class ChordNode {
     }
 
     findPredecessor(): NodeDetails {
+        if(!this.predecessor){
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Returning predecessor null`);
+            return this.predecessor;
+        }
+
+        console.log(`Node ${constructNodeStr(this.nodeDetails)} => Returning predecessor ${constructNodeStr(this.predecessor)}`);
         return this.predecessor;
     }
 }

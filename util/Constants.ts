@@ -1,1 +1,1 @@
-export const HASH_NUM_OF_BITS = 4;
+export const HASH_NUM_OF_BITS = 3;
