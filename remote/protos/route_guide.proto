@@ -7,11 +7,10 @@ import "google/protobuf/empty.proto";
 service RouteGuide {
     rpc DummyRemote(DummyRequest) returns (DummyResponse);
     rpc GetSuccessorRemote(SuccessorRequest) returns (NodeDetails);
-    rpc NotifyRemote(NotifyRequest) returns ();
-    rpc GetFingerTableRemote() returns ()
+    rpc NotifyRemote(NotifyRequest) returns (google.protobuf.Empty);
+    rpc GetFingerTableRemote(google.protobuf.Empty) returns (FingerTableResponse);
+    rpc GetPredecessorRemote(google.protobuf.Empty) returns (PredecessorResponse);
 }
-
-
 
 message DummyRequest {
     uint32 id = 1;
@@ -31,7 +30,7 @@ message SuccessorRequest {
     uint32 id = 1;
 }
 
-message NotifytRequest{
+message NotifyRequest {
     NodeDetails predecessor = 1;
 }
 
@@ -40,3 +39,6 @@ message FingerTableResponse {
     repeated NodeDetails fingers = 2;
 }
 
+message PredecessorResponse {
+    NodeDetails predecessor = 1;
+}

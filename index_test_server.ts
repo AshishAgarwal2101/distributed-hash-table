@@ -8,8 +8,8 @@ async function main() {
     console.log(`Host: ${host}`);
     console.log(`Port: ${port}`);
 
-    let server = new RemoteServer(host, port);
-    server.startServer();
+    let server = new RemoteServer(host, port, null);
+    server.startServer(null, null);
     let successorResponse = await server.findSuccessor(1100);
 
     console.log("Response: ", successorResponse);

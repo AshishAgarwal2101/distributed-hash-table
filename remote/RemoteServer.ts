@@ -16,8 +16,8 @@ let protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
 let routeguide: any = (grpc.loadPackageDefinition(packageDefinition)).chord;
 
 class RemoteServer extends ChordNode {
-    constructor(host: string, port: number){
-        super(host, port);
+    constructor(host: string, port: number, hashId: number){
+        super(host, port, hashId);
     }
 
     getServer(): grpc.Server {
@@ -26,17 +26,25 @@ class RemoteServer extends ChordNode {
             dummyRemote: this.dummyRemote.bind(this),
             getSuccessorRemote: this.getSuccessorRemote.bind(this),
             notifyRemote : this.notifyRemote.bind(this),
-            getFingerTableRemote: this.getFingerTableRemote.bind(this)
+            getFingerTableRemote: this.getFingerTableRemote.bind(this),
+            getPredecessorRemote: this.getPredecessorRemote.bind(this)
         });
     
         return server;
     };
 
-    startServer(): void {
+    startServer(refNodeHost: string, refNodePort: number): void {
         let server = this.getServer();
         server.bind(`localhost:${this.nodeDetails.port}`, grpc.ServerCredentials.createInsecure());
         server.start();
-        console.log(`Server started at ${this.nodeDetails.host}:${this.nodeDetails.port}`)
+        console.log(`Server started at ${this.nodeDetails.host}:${this.nodeDetails.port}`);
+
+        if(refNodeHost && refNodePort) {
+            this.join({id: null, host: refNodeHost, port: refNodePort});
+        }
+        else {
+            this.create();
+        }
     }
 
     dummyRemote(call, callback) {
@@ -53,8 +61,13 @@ class RemoteServer extends ChordNode {
     }
 
     async getFingerTableRemote(call, callback) {
-        let fingerTable = this.getFingerTable();
+        let fingerTable = this.findFingerTable();
         callback(null, fingerTable);
+    }
+
+    async getPredecessorRemote(call, callback) {
+        let predecessor = this.findPredecessor();
+        callback(null, {predecessor} );
     }
 }
 
