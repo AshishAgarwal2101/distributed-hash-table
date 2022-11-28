@@ -16,8 +16,27 @@ app.get("/:port", async (req, res) => {
 
     console.log(`Retuning finger table by querying node at port ${reqNodePort}`);
     let fingerTablePath = await getCompleteFingerTablePath(reqNodePort);
-    res.send(fingerTablePath);
+    res.send(constructFingersHtml(fingerTablePath));
 });
+
+let constructFingersHtml = (fingerTablePath: {number: {nodeDetails: NodeDetails, figers: NodeDetails[]}}) => {
+    let nodeFingers = [];
+    let html = "<html><style> table {margin-bottom: 50px;}</style><body><div>";
+    for(let key in fingerTablePath){
+        let nodeDetails = fingerTablePath[key].nodeDetails;
+        let fingers = fingerTablePath[key].fingers;
+        nodeFingers.push({nodeDetails, fingers});
+
+        html = html + "<div>Details for Node with Id " + nodeDetails.id + "</div><table><tr><th>Finger Id</th><th>Node Id</th><th>Host</th><th>Port</th></tr>";
+        fingers.forEach((finger, index) => {
+            html = html + "<tr><td>" + index + "</td>" + "<td>" + finger.id + "</td>" + "<td>" + finger.host + "</td>" + "<td>" + finger.port + "</td></tr>";
+        });
+        html = html + "</table>";
+    }
+
+    html = html + "</div></body></html>";
+    return html;
+};
 
 app.get("/put/:port", async (req, res) => {
     let reqNodePort = req.params['port'];
@@ -27,8 +46,15 @@ app.get("/put/:port", async (req, res) => {
     console.log(`Putting key-val: ${key + "-" + val}. Sending request to node with port ${reqNodePort}`);
     try{
         let nodeClient = getClient("localhost", reqNodePort);
-        let putRes = await nodeClient.putRemote({key, val});
-        res.send(putRes);
+        let putResponse = await nodeClient.putRemote({key, val});
+        let insertedAt = putResponse.insertedAt;
+        let result = "<div>Inserted at below node</div>";
+        if(insertedAt){
+            result = result + "<table><tr><th>Node Id</th><th>Host</th><th>Port</th></tr><tr><td>" + 
+                insertedAt.id + "</td><td>" + insertedAt.host + "</td><td>" + insertedAt.port + 
+                "</td></tr></table>";
+        }
+        res.send(result);
     }catch(e){
         res.send(`Error while trying to insert key-val. Error: ${e}`);
     }
@@ -41,8 +67,14 @@ app.get("/get/:port", async (req, res) => {
     console.log(`Getting val from key: ${key}. Sending request to node with port ${reqNodePort}`);
     try{
         let nodeClient = getClient("localhost", reqNodePort);
-        let getRes = await nodeClient.getRemote({key});
-        res.send(getRes);
+        let getResponse = await nodeClient.getRemote({key});
+        let result = "<div>Returned Value: " + (getResponse.val ? getResponse.val : "") + "</div><div>Retrieved from below node</div>";
+        if(getResponse.retrievedFrom){
+            result = result + "<table><tr><th>Node Id</th><th>Host</th><th>Port</th></tr><tr><td>" + 
+            getResponse.retrievedFrom.id + "</td><td>" + getResponse.retrievedFrom.host + "</td><td>" + getResponse.retrievedFrom.port + 
+                "</td></tr></table>";
+        }
+        res.send(result);
     }catch(e){
         res.send(`Error while trying to get value from key. Error: ${e}`);
     }
