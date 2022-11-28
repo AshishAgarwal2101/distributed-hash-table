@@ -29,7 +29,8 @@ class RemoteServer extends ChordNode {
             getFingerTableRemote: this.getFingerTableRemote.bind(this),
             getPredecessorRemote: this.getPredecessorRemote.bind(this),
             putRemote: this.putRemote.bind(this),
-            getRemote: this.getRemote.bind(this)
+            getRemote: this.getRemote.bind(this),
+            copyMapRemote: this.copyMapRemote.bind(this)
         });
     
         return server;
@@ -80,6 +81,10 @@ class RemoteServer extends ChordNode {
     async getRemote(call, callback) {
         let getResult = await this.get(call.request.key);
         callback(null, getResult);
+    }
+
+    async copyMapRemote(call, callback) {
+        await this.copyMap(call.request.toRemoveMap);
     }
 }
 

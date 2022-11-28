@@ -42,6 +42,7 @@ class ChordNode {
         this.closestPrecedingNode = this.closestPrecedingNode.bind(this);
         this.fixFingers = this.fixFingers.bind(this);
         this.findFingerTable = this.findFingerTable.bind(this);
+        this.updateMap = this.updateMap.bind(this);
 
         setInterval(this.stabilize, 6000); //called every 6 seconds
     }
@@ -153,16 +154,44 @@ class ChordNode {
 
     async notify(refNode:NodeDetails): Promise<void> {
         try{
+            let lastPredecessorId = this.predecessor?.id;
             console.log(`Node ${constructNodeStr(this.nodeDetails)} => Notify called with refNode  ${constructNodeStr(refNode)}`);
             if(!this.predecessor || (isIdInBetween(this.predecessor.id, this.nodeDetails.id, refNode.id))){
                 this.predecessor = refNode;
                 if(this.successors.length == 0 || this.successors[0] === this.nodeDetails){
                     this.successors[0] = refNode;
                 }
+                else if(lastPredecessorId !== this.predecessor.id) {
+                    this.updateMap();
+                }
             } 
         }catch(e){
             console.log("Error during node notify: ", e);
         }
+    }
+
+    async updateMap() {
+        let toRemoveMap: Array< {key: number, val: string} > = [];
+        for(let keyStr in this.localMap){
+            let key = parseInt(keyStr);
+            let val: string = this.localMap[key];
+            if(key <= this.predecessor.id){
+                toRemoveMap.push({key, val});
+            }
+        }
+
+        let predecessorClient = getClient(this.predecessor.host, this.predecessor.port);
+        await predecessorClient.copyMapRemote({toRemoveMap});
+
+        toRemoveMap.forEach(({key, val}) => {
+            delete this.localMap[key];
+        });
+    };
+
+    async copyMap(copyMapData: Array< {key: number, val: string} >) {
+        copyMapData.forEach(({key, val}) => {
+            this.localMap[key] = val;
+        });
     }
 
     async fixFingers(): Promise<void> {
@@ -221,20 +250,20 @@ class ChordNode {
         }
     }
 
-    async get(key: number): Promise< {val: number} > {
+    async get(key: number): Promise< {val: number, retrievedFrom: NodeDetails} > {
         console.log(`Node queried for key ${key}. Locally found ${this.localMap[key]}`);
         if(!key){
-            return {val: null};
+            return {val: null, retrievedFrom: this.nodeDetails};
         }
         key = key % (2 ** HASH_NUM_OF_BITS);
         try{
             if(this.localMap[key]){
-                return {val: this.localMap[key]};
+                return {val: this.localMap[key], retrievedFrom: this.nodeDetails};
             }
             if(key === this.nodeDetails.id 
                 || (this.successors.length == 0 || this.successors[0] === this.nodeDetails)
                 || isIdInBetween(this.predecessor.id, this.nodeDetails.id, key)){
-                    return {val: null};
+                    return {val: null, retrievedFrom: this.nodeDetails};
             }
 
             let successor:NodeDetails = await this.findSuccessor(key);

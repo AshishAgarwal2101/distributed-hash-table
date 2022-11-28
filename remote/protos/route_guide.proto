@@ -12,6 +12,7 @@ service RouteGuide {
     rpc GetPredecessorRemote(google.protobuf.Empty) returns (PredecessorResponse);
     rpc PutRemote(PutRequest) returns (PutResponse);
     rpc GetRemote(GetRequest) returns (GetResponse);
+    rpc CopyMapRemote(CopyMapRequest) returns (google.protobuf.Empty);
 }
 
 message DummyRequest {
@@ -60,4 +61,9 @@ message GetRequest {
 
 message GetResponse {
     string val = 1;
+    NodeDetails retrievedFrom = 2;
+}
+
+message CopyMapRequest {
+    repeated PutRequest toRemoveMap = 1;
 }
