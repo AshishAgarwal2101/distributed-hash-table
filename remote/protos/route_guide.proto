@@ -10,6 +10,8 @@ service RouteGuide {
     rpc NotifyRemote(NotifyRequest) returns (google.protobuf.Empty);
     rpc GetFingerTableRemote(google.protobuf.Empty) returns (FingerTableResponse);
     rpc GetPredecessorRemote(google.protobuf.Empty) returns (PredecessorResponse);
+    rpc PutRemote(PutRequest) returns (PutResponse);
+    rpc GetRemote(GetRequest) returns (GetResponse);
 }
 
 message DummyRequest {
@@ -41,4 +43,21 @@ message FingerTableResponse {
 
 message PredecessorResponse {
     NodeDetails predecessor = 1;
+}
+
+message PutRequest {
+    uint32 key = 1;
+    string val = 2;
+}
+
+message PutResponse {
+    NodeDetails insertedAt = 1;
+}
+
+message GetRequest {
+    uint32 key = 1;
+}
+
+message GetResponse {
+    string val = 1;
 }

@@ -1,6 +1,7 @@
 import express from "express";
 import { NodeDetails } from "./local/ChordNode";
 import { getClient } from "./remote/RemoteClient";
+import { HASH_NUM_OF_BITS } from "./util/Constants";
 //const express = require("express")
 const app = express()
 
@@ -13,8 +14,38 @@ app.get("/:port", async (req, res) => {
     let reqNodePort = req.params['port'];
     let textColor = getRandomColor();
 
-    let fingerTablePath = getCompleteFingerTablePath(reqNodePort);
-    res.send("Work going on...");
+    console.log(`Retuning finger table by querying node at port ${reqNodePort}`);
+    let fingerTablePath = await getCompleteFingerTablePath(reqNodePort);
+    res.send(fingerTablePath);
+});
+
+app.get("/put/:port", async (req, res) => {
+    let reqNodePort = req.params['port'];
+    let key = parseInt(req.query.key);
+    key = key % (2 ** HASH_NUM_OF_BITS);
+    let val = req.query.val;
+    console.log(`Putting key-val: ${key + "-" + val}. Sending request to node with port ${reqNodePort}`);
+    try{
+        let nodeClient = getClient("localhost", reqNodePort);
+        let putRes = await nodeClient.putRemote({key, val});
+        res.send(putRes);
+    }catch(e){
+        res.send(`Error while trying to insert key-val. Error: ${e}`);
+    }
+});
+
+app.get("/get/:port", async (req, res) => {
+    let reqNodePort = req.params['port'];
+    let key = parseInt(req.query.key);
+    key = key % (2 ** HASH_NUM_OF_BITS);
+    console.log(`Getting val from key: ${key}. Sending request to node with port ${reqNodePort}`);
+    try{
+        let nodeClient = getClient("localhost", reqNodePort);
+        let getRes = await nodeClient.getRemote({key});
+        res.send(getRes);
+    }catch(e){
+        res.send(`Error while trying to get value from key. Error: ${e}`);
+    }
 });
 
 const getCompleteFingerTablePath = async (reqNodePort: number): Promise<{number: {nodeDetails: NodeDetails, figers: NodeDetails[]}}> => {
@@ -38,7 +69,9 @@ const getCompleteFingerTablePathFromInitNode = async (
         nodeFingerIteratedSet: Set<number>
     ): Promise<{number: {nodeDetails: NodeDetails, figers: NodeDetails[]}}> => {
     let allNodes = {...nodeFingerAllMap};
-    for(let [nodeId, nodeDetails] of allNodes){
+    for(let nodeIdStr in allNodes){
+        let nodeId = parseInt(nodeIdStr);
+        let nodeDetails = allNodes[nodeId]
         if(!nodeFingerIteratedSet.has(nodeId)){
             let nodeClient = getClient("localhost", nodeDetails.port);
             let fingerDetails = await nodeClient.getFingerTableRemote();

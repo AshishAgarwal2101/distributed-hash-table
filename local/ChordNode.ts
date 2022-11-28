@@ -21,6 +21,7 @@ class ChordNode {
     predecessor: NodeDetails = null;
     fingers: Array<NodeDetails> = [];
     next: number = -1;
+    localMap = {};
 
     constructor(host: string, port: number, hashId: number){
         console.log(`HashId 1 ==== ${hashId}`);
@@ -32,7 +33,6 @@ class ChordNode {
             port: port
         }
         
-        this.isItMyNode = this.isItMyNode.bind(this);
         this.findSuccessor = this.findSuccessor.bind(this);
         this.findSuccessorRemote = this.findSuccessorRemote.bind(this);
         this.create = this.create.bind(this);
@@ -44,11 +44,6 @@ class ChordNode {
         this.findFingerTable = this.findFingerTable.bind(this);
 
         setInterval(this.stabilize, 6000); //called every 6 seconds
-    }
-
-    isItMyNode(nodeDetails: NodeDetails): boolean {
-        if(nodeDetails.id == this.nodeDetails.id) return true;
-        return false;
     }
 
     async findSuccessor(id: number): Promise<NodeDetails> {
@@ -201,6 +196,53 @@ class ChordNode {
 
         console.log(`Node ${constructNodeStr(this.nodeDetails)} => Returning predecessor ${constructNodeStr(this.predecessor)}`);
         return this.predecessor;
+    }
+
+    async put(key: number, val: string): Promise<{insertedAt: NodeDetails}> {
+        console.log(`Node put request for key-val ${key + "-" + val}`);
+        if(!key){
+            return null;
+        }
+        key = key % (2 ** HASH_NUM_OF_BITS);
+        try{
+            if(key === this.nodeDetails.id 
+                || (this.successors.length == 0 || this.successors[0] === this.nodeDetails)
+                || isIdInBetween(this.predecessor.id, this.nodeDetails.id, key)){
+                    this.localMap[key] = val;
+                    console.log(`Node put request for key-val ${key + "-" + val} inserted in this node`);
+                    return {insertedAt: this.nodeDetails};
+            }
+
+            let successor:NodeDetails = await this.findSuccessor(key);
+            let successorClient = getClient(successor.host, successor.port);
+            return await successorClient.putRemote({key, val});
+        }catch(e){
+            console.log(`Error during key value insertion: Key: ${key}, Val: ${val}`);
+        }
+    }
+
+    async get(key: number): Promise< {val: number} > {
+        console.log(`Node queried for key ${key}. Locally found ${this.localMap[key]}`);
+        if(!key){
+            return {val: null};
+        }
+        key = key % (2 ** HASH_NUM_OF_BITS);
+        try{
+            if(this.localMap[key]){
+                return {val: this.localMap[key]};
+            }
+            if(key === this.nodeDetails.id 
+                || (this.successors.length == 0 || this.successors[0] === this.nodeDetails)
+                || isIdInBetween(this.predecessor.id, this.nodeDetails.id, key)){
+                    return {val: null};
+            }
+
+            let successor:NodeDetails = await this.findSuccessor(key);
+            let successorClient = getClient(successor.host, successor.port);
+            return await successorClient.getRemote({key});
+        }catch(e){
+            console.log(`Error during key value retrieval: Key: ${key}`);
+        }
     }
 }
 

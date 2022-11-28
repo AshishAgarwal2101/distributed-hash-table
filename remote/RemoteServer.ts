@@ -27,7 +27,9 @@ class RemoteServer extends ChordNode {
             getSuccessorRemote: this.getSuccessorRemote.bind(this),
             notifyRemote : this.notifyRemote.bind(this),
             getFingerTableRemote: this.getFingerTableRemote.bind(this),
-            getPredecessorRemote: this.getPredecessorRemote.bind(this)
+            getPredecessorRemote: this.getPredecessorRemote.bind(this),
+            putRemote: this.putRemote.bind(this),
+            getRemote: this.getRemote.bind(this)
         });
     
         return server;
@@ -68,6 +70,16 @@ class RemoteServer extends ChordNode {
     async getPredecessorRemote(call, callback) {
         let predecessor = this.findPredecessor();
         callback(null, {predecessor} );
+    }
+
+    async putRemote(call, callback) {
+        let insertResult = await this.put(call.request.key, call.request.val);
+        callback(null, insertResult);
+    }
+
+    async getRemote(call, callback) {
+        let getResult = await this.get(call.request.key);
+        callback(null, getResult);
     }
 }
 
