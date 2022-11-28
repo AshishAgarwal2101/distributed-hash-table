@@ -10,7 +10,7 @@
     "start": "node dist/index.js",
     "startExpress": "node dist/index_express.js",
     "testServer": "node dist/index_test_server.js",
-    "copyUnix:assets": "cp 'remote/protos/**' 'dist/remote/protos/'",
+    "copyUnix:assets": "cp -a remote/protos/. dist/remote/protos/",
     "copyWindows:assets": "echo d | xcopy /E remote\\protos dist\\remote\\protos"
   },
   "keywords": [],
