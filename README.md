@@ -20,7 +20,7 @@
 2. Run the following commands in three different terminals: <br />
     npm start -- localhost 4001 <br />
     npm start -- localhost 4002 localhost 4001 2 <br />
-    npm start -- localhost 4007 localhost 4007 3 <br />
+    npm start -- localhost 4007 localhost 4002 3 <br />
 3. Start Express Server in another terminal: <br />
     npm run startExpress localhost 3000
 3. Wait for all fingers to fix
