@@ -78,7 +78,7 @@ class ChordNode {
             console.log(`Node ${constructNodeStr(this.nodeDetails)} => Found successor ${constructNodeStr(succ)}`);
             return succ;
         } catch(error) {
-            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Error while trying to find successor from remote node ${constructNodeStr(closestPrecedingNode)}`);
+            console.log(`Node ${constructNodeStr(this.nodeDetails)} => Error while trying to find successor from remote node ${constructNodeStr(closestPrecedingNode)} => Error: ${error}`);
             return null;
         }
     }
