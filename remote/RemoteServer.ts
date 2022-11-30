@@ -38,7 +38,7 @@ class RemoteServer extends ChordNode {
 
     startServer(refNodeHost: string, refNodePort: number): void {
         let server = this.getServer();
-        server.bind(`localhost:${this.nodeDetails.port}`, grpc.ServerCredentials.createInsecure());
+        server.bind(`0.0.0.0:${this.nodeDetails.port}`, grpc.ServerCredentials.createInsecure());
         server.start();
         console.log(`Server started at ${this.nodeDetails.host}:${this.nodeDetails.port}`);
 

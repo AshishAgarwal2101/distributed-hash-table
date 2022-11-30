@@ -10,6 +10,8 @@ app.get("/", async (req, res) => {
     res.send(`<html><p style='color: ${textColor}'>Simple HTML Example with random color ${textColor}</p></html>`);
 });
 
+app.get('/favicon.ico', (req, res) => res.status(204));
+
 app.get("/:port", async (req, res) => {
     let reqNodePort = req.params['port'];
     let textColor = getRandomColor();
