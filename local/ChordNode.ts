@@ -44,7 +44,7 @@ class ChordNode {
         this.findFingerTable = this.findFingerTable.bind(this);
         this.updateMap = this.updateMap.bind(this);
 
-        setInterval(this.stabilize, 6000); //called every 6 seconds
+        setInterval(this.stabilize, 10000); //called every 6 seconds
     }
 
     async findSuccessor(id: number): Promise<NodeDetails> {
@@ -106,7 +106,7 @@ class ChordNode {
             this.successors[0] = this.nodeDetails;
             this.fingers = [];
             this.next =  -1;
-            setInterval(this.fixFingers, 5000); //called every 5 seconds
+            setInterval(this.fixFingers, 9000); //called every 5 seconds
         }catch(e){
             console.log("Error during node create: ", e);
         }
@@ -121,7 +121,7 @@ class ChordNode {
             this.fingers[0] = this.successors[0];
             console.log(`Node ${constructNodeStr(this.nodeDetails)} => Node's successor and first finger: ${constructNodeStr(this.successors[0])}`);
             this.next =  0;
-            setInterval(this.fixFingers, 5000); //called every 5 seconds
+            setInterval(this.fixFingers, 9000); //called every 5 seconds
         }catch(e){
             console.log("Error during node join: ", e);
         }
