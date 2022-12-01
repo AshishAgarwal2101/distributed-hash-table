@@ -10,7 +10,7 @@
 1. If you are using Windows, run command: "npm run buildWin".
 2. If you are using Unix based system, run command: "npm run build".
 
-### Starting the Server (Currently in development, not working)
+### Starting the Server
 1. Run command: "npm start -- \<host> \<port>" <br />
     e.g. npm start -- localhost 4003
 
