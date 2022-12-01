@@ -33,3 +33,6 @@ dist/
 
 # Lock files
 package-lock.json
+
+#Others
+/.idea

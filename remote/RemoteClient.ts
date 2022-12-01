@@ -1,5 +1,4 @@
 import grpcCaller from "grpc-caller";
-import grpc from"@grpc/grpc-js";
 
 let PROTO_PATH = __dirname + '/protos/route_guide.proto';
 
