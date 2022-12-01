@@ -10,6 +10,8 @@ app.get("/", async (req, res) => {
     res.send(`<html><p style='color: ${textColor}'>Simple HTML Example with random color ${textColor}</p></html>`);
 });
 
+app.get('/favicon.ico', (req, res) => res.status(204));
+
 app.get("/:port", async (req, res) => {
     let reqNodePort = req.params['port'];
     let textColor = getRandomColor();
@@ -45,7 +47,7 @@ app.get("/put/:port", async (req, res) => {
     let val = req.query.val;
     console.log(`Putting key-val: ${key + "-" + val}. Sending request to node with port ${reqNodePort}`);
     try{
-        let nodeClient = getClient("localhost", reqNodePort);
+        let nodeClient = getClient("0.0.0.0", reqNodePort);
         let putResponse = await nodeClient.putRemote({key, val});
         let insertedAt = putResponse.insertedAt;
         let result = "<div>Inserted at below node</div>";
@@ -66,7 +68,7 @@ app.get("/get/:port", async (req, res) => {
     key = key % (2 ** HASH_NUM_OF_BITS);
     console.log(`Getting val from key: ${key}. Sending request to node with port ${reqNodePort}`);
     try{
-        let nodeClient = getClient("localhost", reqNodePort);
+        let nodeClient = getClient("0.0.0.0", reqNodePort);
         let getResponse = await nodeClient.getRemote({key});
         let result = "<div>Returned Value: " + (getResponse.val ? getResponse.val : "") + "</div><div>Retrieved from below node</div>";
         if(getResponse.retrievedFrom){
@@ -81,7 +83,7 @@ app.get("/get/:port", async (req, res) => {
 });
 
 const getCompleteFingerTablePath = async (reqNodePort: number): Promise<{number: {nodeDetails: NodeDetails, figers: NodeDetails[]}}> => {
-    let initialNodeClient = getClient("localhost", reqNodePort);
+    let initialNodeClient = getClient("0.0.0.0", reqNodePort);
     let fingerDetails = await initialNodeClient.getFingerTableRemote();
     let initialNodeDetails: NodeDetails = fingerDetails.currNode;
     let initialNodeFingerTable: Array<NodeDetails> = fingerDetails.fingers;
@@ -105,7 +107,7 @@ const getCompleteFingerTablePathFromInitNode = async (
         let nodeId = parseInt(nodeIdStr);
         let nodeDetails = allNodes[nodeId]
         if(!nodeFingerIteratedSet.has(nodeId)){
-            let nodeClient = getClient("localhost", nodeDetails.port);
+            let nodeClient = getClient("0.0.0.0", nodeDetails.port);
             let fingerDetails = await nodeClient.getFingerTableRemote();
             let nodeFingerTable: Array<NodeDetails> = fingerDetails.fingers;
             addToNodeMap(nodeFingerAllMap, nodeFingerTable);
