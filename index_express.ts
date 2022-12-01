@@ -12,12 +12,12 @@ app.get("/", async (req, res) => {
 
 app.get('/favicon.ico', (req, res) => res.status(204));
 
-app.get("/:port", async (req, res) => {
-    let reqNodePort = req.params['port'];
-    let textColor = getRandomColor();
+app.get("/fingers", async (req, res) => {
+    let requestNodeHost = req.query.knownHost;
+    let requestNodePort = req.query.knownPort;
 
-    console.log(`Retuning finger table by querying node at port ${reqNodePort}`);
-    let fingerTablePath = await getCompleteFingerTablePath(reqNodePort);
+    console.log(`Retuning finger table by querying node at port ${requestNodeHost}:${requestNodePort}`);
+    let fingerTablePath = await getCompleteFingerTablePath(requestNodeHost, requestNodePort);
     res.send(constructFingersHtml(fingerTablePath));
 });
 
@@ -40,14 +40,16 @@ let constructFingersHtml = (fingerTablePath: {number: {nodeDetails: NodeDetails,
     return html;
 };
 
-app.get("/put/:port", async (req, res) => {
-    let reqNodePort = req.params['port'];
+app.get("/put", async (req, res) => {
+    let requestNodeHost = req.query.knownHost;
+    let requestNodePort = req.query.knownPort;
+
     let key = parseInt(req.query.key);
     key = key % (2 ** HASH_NUM_OF_BITS);
     let val = req.query.val;
-    console.log(`Putting key-val: ${key + "-" + val}. Sending request to node with port ${reqNodePort}`);
+    console.log(`Putting key-val: ${key + "-" + val}. Sending request to node with port ${requestNodeHost}:${requestNodePort}`);
     try{
-        let nodeClient = getClient("0.0.0.0", reqNodePort);
+        let nodeClient = getClient(requestNodeHost, requestNodePort);
         let putResponse = await nodeClient.putRemote({key, val});
         let insertedAt = putResponse.insertedAt;
         let result = "<div>Inserted at below node</div>";
@@ -62,13 +64,15 @@ app.get("/put/:port", async (req, res) => {
     }
 });
 
-app.get("/get/:port", async (req, res) => {
-    let reqNodePort = req.params['port'];
+app.get("/get", async (req, res) => {
+    let requestNodeHost = req.query.knownHost;
+    let requestNodePort = req.query.knownPort;
+
     let key = parseInt(req.query.key);
     key = key % (2 ** HASH_NUM_OF_BITS);
-    console.log(`Getting val from key: ${key}. Sending request to node with port ${reqNodePort}`);
+    console.log(`Getting val from key: ${key}. Sending request to node with port ${requestNodeHost}:${requestNodePort}`);
     try{
-        let nodeClient = getClient("0.0.0.0", reqNodePort);
+        let nodeClient = getClient(requestNodeHost, requestNodePort);
         let getResponse = await nodeClient.getRemote({key});
         let result = "<div>Returned Value: " + (getResponse.val ? getResponse.val : "") + "</div><div>Retrieved from below node</div>";
         if(getResponse.retrievedFrom){
@@ -82,8 +86,8 @@ app.get("/get/:port", async (req, res) => {
     }
 });
 
-const getCompleteFingerTablePath = async (reqNodePort: number): Promise<{number: {nodeDetails: NodeDetails, figers: NodeDetails[]}}> => {
-    let initialNodeClient = getClient("0.0.0.0", reqNodePort);
+const getCompleteFingerTablePath = async (reqNodeHost, reqNodePort: number): Promise<{number: {nodeDetails: NodeDetails, figers: NodeDetails[]}}> => {
+    let initialNodeClient = getClient(reqNodeHost, reqNodePort);
     let fingerDetails = await initialNodeClient.getFingerTableRemote();
     let initialNodeDetails: NodeDetails = fingerDetails.currNode;
     let initialNodeFingerTable: Array<NodeDetails> = fingerDetails.fingers;
@@ -107,7 +111,7 @@ const getCompleteFingerTablePathFromInitNode = async (
         let nodeId = parseInt(nodeIdStr);
         let nodeDetails = allNodes[nodeId]
         if(!nodeFingerIteratedSet.has(nodeId)){
-            let nodeClient = getClient("0.0.0.0", nodeDetails.port);
+            let nodeClient = getClient(nodeDetails.host, nodeDetails.port);
             let fingerDetails = await nodeClient.getFingerTableRemote();
             let nodeFingerTable: Array<NodeDetails> = fingerDetails.fingers;
             addToNodeMap(nodeFingerAllMap, nodeFingerTable);
