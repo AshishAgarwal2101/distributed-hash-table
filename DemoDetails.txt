@@ -1,20 +1,26 @@
+2 parts of project: Cluster and ExpressServer
+
 Starting a Server:
 1. Without known node: npm start -- <host> <port>
 e.g. npm start -- localhost 4001
 
 2. With known node: npm start -- <host> <port> <knownNodeHost> <knownNodePort> <hashId>
-e.g. npm start -- localhost 4002 localhost 4001 
+e.g. npm start -- localhost 4002 localhost 4001 2
 
 Express Server::::::
-1. Querying the finger tables:
+1. Starting the server:
+npm run startExpress <host> <port>
+npm run startExpress localhost 3000
+
+2. Querying the finger tables:
 http://<host>:<port>/<known-port-of-any-node>
 http://localhost:3000/4001
 
-2. Inserting key-value pairs:
+3. Inserting key-value pairs:
 http://<host>:<port>/put/<known-port-of-any-node>?key=<key>&val=<val>
 http://localhost:3000/put/4001?key=3&val=num3
 
-3. Getting value for key:
+4. Getting value for key:
 http://<host>:<port>/get/<known-port-of-any-node>?key=<key>
 http://localhost:3000/get/4001?key=3
 
@@ -28,6 +34,9 @@ http://localhost:3000/get/4001?key=3
 0 - 3 - 7
 1 - 4 - 7
 2 - 6 - 7
+
+5:
+
 
 4007 (7):
 0 - 0 - 1
